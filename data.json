@@ -1,0 +1,6 @@
+[
+    {"name": "Objeto 1", "description": "Descripción 1", "weight": "1 kg", "value": "$10"},
+    {"name": "Objeto 2", "description": "Descripción 2", "weight": "2 kg", "value": "$20"},
+    {"name": "Objeto 3", "description": "Descripción 3", "weight": "3 kg", "value": "$30"},
+    {"name": "Objeto 4", "description": "Descripción 4", "weight": "4 kg", "value": "$40"}
+]
