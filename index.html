@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Objetos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        .search-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .search-container input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .search-container img {
+            width: 50px;
+            height: 50px;
+            margin-left: 10px;
+        }
+        .percentage {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .form-container input, .form-container button {
+            padding: 10px;
+            font-size: 16px;
+        }
+        .form-container button {
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            th, td {
+                display: block;
+                text-align: right;
+            }
+            th::before, td::before {
+                float: left;
+                font-weight: bold;
+                text-transform: uppercase;
+                content: attr(data-label);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Buscar...">
+            <div>
+                <img src="https://via.placeholder.com/50" alt="Porcentaje">
+                <div class="percentage">75%</div>
+            </div>
+        </div>
+        <div class="form-container">
+            <input type="text" id="name" placeholder="Nombre">
+            <input type="text" id="description" placeholder="Descripción">
+            <input type="text" id="weight" placeholder="Peso">
+            <input type="text" id="value" placeholder="Valor">
+            <button onclick="addItem()">Añadir</button>
+        </div>
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Peso</th>
+                    <th>Valor</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Filas de datos se añadirán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+
+        /* document.addEventListener('DOMContentLoaded', function() {
+            data.fetch('./data.json')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.querySelector('#dataTable tbody');
+                    data.forEach(item => {
+                        const newRow = tableBody.insertRow();
+                        newRow.innerHTML = `
+                            <td>${item.name}</td>
+                            <td>${item.description}</td>
+                            <td>${item.weight}</td>
+                            <td>${item.value}</td>
+                            <td><button onclick="deleteItem(this)">Borrar</button></td>
+                        `;
+                    });
+                })
+                .catch(error => console.error('Error al cargar los datos:', error));
+        }); */
+
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#dataTable tbody tr');
+            rows.forEach(row => {
+                const cells = row.getElementsByTagName('td');
+                let match = false;
+                for (let i = 0; i < cells.length - 1; i++) {
+                    if (cells[i].innerText.toLowerCase().includes(filter)) {
+                        match = true;
+                        break;
+                    }
+                }
+                row.style.display = match ? '' : 'none';
+            });
+        });
+
+        function addItem() {
+            const name = document.getElementById('name').value;
+            const description = document.getElementById('description').value;
+            const weight = document.getElementById('weight').value;
+            const value = document.getElementById('value').value;
+
+            if (name && description && weight && value) {
+                const table = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+                const newRow = table.insertRow();
+
+                newRow.innerHTML = `
+                    <td>${name}</td>
+                    <td>${description}</td>
+                    <td>${weight}</td>
+                    <td>${value}</td>
+                    <td><button onclick="deleteItem(this)">Borrar</button></td>
+                `;
+
+                // Limpiar los campos de entrada
+                document.getElementById('name').value = '';
+                document.getElementById('description').value = '';
+                document.getElementById('weight').value = '';
+                document.getElementById('value').value = '';
+            } else {
+                alert('Por favor, completa todos los campos.');
+            }
+        }
+
+        function deleteItem(button) {
+            const row = button.parentElement.parentElement;
+            row.remove();
+        }
+    </script>
+</body>
+</html>
