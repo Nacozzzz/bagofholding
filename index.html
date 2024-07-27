@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Listado de Objetos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,15 +24,50 @@
             padding: 10px;
             font-size: 16px;
         }
-        .search-container img {
-            width: 50px;
-            height: 50px;
+        .image-container {
+            position: relative;
+            display: inline-block;
             margin-left: 10px;
         }
+        .image-container img {
+            width: 100px;
+            height: 100px;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
         .percentage {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: rgb(0, 0, 0);
+            font-size: 12px;
+            user-select: none;
+            font-weight: bold;
+        }
+        .settings-button, .add-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .settings-container {
+            display: none;
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .settings-container label {
+            display: block;
+            margin-bottom: 10px;
             text-align: center;
-            font-size: 14px;
-            margin-top: 5px;
+        }
+        .settings-container input[type="range"] {
+            width: 95%;
         }
         table {
             width: 100%;
@@ -44,7 +80,7 @@
             border-bottom: 1px solid #ddd;
         }
         .form-container {
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 10px;
             margin-bottom: 20px;
@@ -56,17 +92,63 @@
         .form-container button {
             cursor: pointer;
         }
+        .edit-btn, .delete-btn {
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+            padding: 5px;
+        }
+        .edit-btn i, .delete-btn i {
+            font-size: 20px;
+        }
+        .description {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         @media (max-width: 600px) {
-            th, td {
-                display: block;
-                text-align: right;
+            .settings-container {
+                width: 90%;
             }
-            th::before, td::before {
-                float: left;
-                font-weight: bold;
-                text-transform: uppercase;
-                content: attr(data-label);
+            .description {
+                max-width: 100px;
             }
+            .edit-btn, .delete-btn {
+                font-size: 20px;
+                padding: 0;
+            }
+            .edit-btn i, .delete-btn i {
+                font-size: 24px;
+            }
+            .delete-btn i {
+                display: inline;
+            }
+            .delete-btn span {
+                display: none;
+            }
+        }
+        .full-description {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .full-description p {
+            margin: 0;
+        }
+        .full-description button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -74,17 +156,25 @@
     <div class="container">
         <div class="search-container">
             <input type="text" id="searchInput" placeholder="Buscar...">
-            <div>
-                <img src="https://via.placeholder.com/50" alt="Porcentaje">
-                <div class="percentage">75%</div>
+            <div class="image-container">
+                <img src="./icon.jpg" alt="Porcentaje">
+                <div class="percentage" id="percentage">0%</div>
+            </div>
+            <button class="settings-button" onclick="toggleSettings()">⚙️</button>
+            <button class="add-button" onclick="toggleForm()">➕</button>
+            <div class="settings-container" id="settingsContainer">
+                <label for="maxWeightSlider">Peso Máximo: <span id="maxWeightLabel" style="width: 50px; display: inline-block;">100</span></label>
+                <input type="range" id="maxWeightSlider" min="1" max="350" value="100" oninput="updateMaxWeightLabel(this.value)">
+                <button onclick="updateMaxWeight()">Actualizar</button>
             </div>
         </div>
-        <div class="form-container">
+        <div class="form-container" id="formContainer">
+            <input type="hidden" id="editIndex" value="-1">
             <input type="text" id="name" placeholder="Nombre">
             <input type="text" id="description" placeholder="Descripción">
-            <input type="text" id="weight" placeholder="Peso">
+            <input type="number" id="weight" placeholder="Peso" step="0.01">
             <input type="text" id="value" placeholder="Valor">
-            <button onclick="addItem()">Añadir</button>
+            <button onclick="saveItem()">Guardar</button>
         </div>
         <table id="dataTable">
             <thead>
@@ -101,25 +191,31 @@
             </tbody>
         </table>
     </div>
+
+    <div class="full-description" id="fullDescription">
+        <p id="descriptionText"></p>
+        <button onclick="closeFullDescription()">✖️</button>
+    </div>
+
     <script>
+        let max_weight = parseFloat(document.getElementById('maxWeightSlider').value);
+        let editingIndex = -1;
 
         document.addEventListener('DOMContentLoaded', function() {
-            data.fetch('https://bagofholding.netlify.app/data.json')
-                .then(response => response.json())
-                .then(data => {
-                    const tableBody = document.querySelector('#dataTable tbody');
-                    data.forEach(item => {
-                        const newRow = tableBody.insertRow();
-                        newRow.innerHTML = `
-                            <td>${item.name}</td>
-                            <td>${item.description}</td>
-                            <td>${item.weight}</td>
-                            <td>${item.value}</td>
-                            <td><button onclick="deleteItem(this)">Borrar</button></td>
-                        `;
-                    });
-                })
-                .catch(error => console.error('Error al cargar los datos:', error));
+            const cookieData = getCookie('tableData');
+            if (cookieData) {
+                const data = JSON.parse(cookieData);
+                loadTable(data);
+            } else {
+                fetch('data.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        loadTable(data);
+                        setCookie('tableData', JSON.stringify(data), 30);
+                    })
+                    .catch(error => console.error('Error al cargar los datos:', error));
+            }
+            updatePercentage();
         });
 
         document.getElementById('searchInput').addEventListener('keyup', function() {
@@ -138,37 +234,190 @@
             });
         });
 
+        function loadTable(data) {
+            const tableBody = document.querySelector('#dataTable tbody');
+            tableBody.innerHTML = '';
+            data.forEach((item, index) => {
+                const newRow = tableBody.insertRow();
+                newRow.innerHTML = `
+                    <td>${item.name}</td>
+                    <td class="description" onclick="showFullDescription('${item.description}')">${truncateText(item.description, 30)}</td>
+                    <td>${item.weight}</td>
+                    <td>${item.value}</td>
+                    <td>
+                        <button class="edit-btn" onclick="editItem(${index})"><i class="fas fa-edit"></i></button>
+                        <button class="delete-btn" onclick="deleteItem(this)"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+            });
+            updatePercentage();
+        }
+
         function addItem() {
             const name = document.getElementById('name').value;
             const description = document.getElementById('description').value;
-            const weight = document.getElementById('weight').value;
+            const weight = parseFloat(document.getElementById('weight').value);
             const value = document.getElementById('value').value;
 
-            if (name && description && weight && value) {
+            if (name && description && !isNaN(weight) && value) {
                 const table = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
-                const newRow = table.insertRow();
+                if (editingIndex === -1) {
+                    const newRow = table.insertRow();
+                    newRow.innerHTML = `
+                        <td>${name}</td>
+                        <td class="description" onclick="showFullDescription('${description}')">${truncateText(description, 30)}</td>
+                        <td>${weight}</td>
+                        <td>${value}</td>
+                        <td>
+                            <button class="edit-btn" onclick="editItem(${table.rows.length - 1})"><i class="fas fa-edit"></i></button>
+                            <button class="delete-btn" onclick="deleteItem(this)"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                } else {
+                    const row = document.querySelectorAll('#dataTable tbody tr')[editingIndex];
+                    row.cells[0].innerText = name;
+                    row.cells[1].innerText = description;
+                    row.cells[2].innerText = weight;
+                    row.cells[3].innerText = value;
+                    row.cells[1].innerHTML = `<td class="description" onclick="showFullDescription('${description}')">${truncateText(description, 30)}</td>`;
+                }
 
-                newRow.innerHTML = `
-                    <td>${name}</td>
-                    <td>${description}</td>
-                    <td>${weight}</td>
-                    <td>${value}</td>
-                    <td><button onclick="deleteItem(this)">Borrar</button></td>
-                `;
+                // Guardar los datos en la cookie
+                const tableData = getTableData();
+                setCookie('tableData', JSON.stringify(tableData), 30);
 
                 // Limpiar los campos de entrada
                 document.getElementById('name').value = '';
                 document.getElementById('description').value = '';
                 document.getElementById('weight').value = '';
                 document.getElementById('value').value = '';
+                document.getElementById('editIndex').value = -1;
+
+                updatePercentage();
+                toggleForm();
             } else {
-                alert('Por favor, completa todos los campos.');
+                alert('Por favor, completa todos los campos con valores válidos.');
             }
+        }
+
+        function editItem(index) {
+            const row = document.querySelectorAll('#dataTable tbody tr')[index];
+            document.getElementById('name').value = row.cells[0].innerText;
+            document.getElementById('description').value = row.cells[1].innerText;
+            document.getElementById('weight').value = row.cells[2].innerText;
+            document.getElementById('value').value = row.cells[3].innerText;
+            document.getElementById('editIndex').value = index;
+            toggleForm();
+        }
+
+        function saveItem() {
+            addItem();
         }
 
         function deleteItem(button) {
             const row = button.parentElement.parentElement;
             row.remove();
+
+            // Guardar los datos actualizados en la cookie
+            const tableData = getTableData();
+            setCookie('tableData', JSON.stringify(tableData), 30);
+
+            updatePercentage();
+        }
+
+        function getTableData() {
+            const rows = document.querySelectorAll('#dataTable tbody tr');
+            const data = [];
+            rows.forEach(row => {
+                const cells = row.getElementsByTagName('td');
+                const item = {
+                    name: cells[0].innerText,
+                    description: cells[1].innerText,
+                    weight: parseFloat(cells[2].innerText),
+                    value: cells[3].innerText
+                };
+                data.push(item);
+            });
+            return data;
+        }
+
+        function setCookie(name, value, days) {
+            const d = new Date();
+            d.setTime(d.getTime() + (days*24*60*60*1000));
+            const expires = "expires="+ d.toUTCString();
+            document.cookie = name + "=" + value + ";" + expires + ";path=/";
+        }
+
+        function getCookie(name) {
+            const cname = name + "=";
+            const decodedCookie = decodeURIComponent(document.cookie);
+            const ca = decodedCookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(cname) == 0) {
+                    return c.substring(cname.length, c.length);
+                }
+            }
+            return "";
+        }
+
+        function updatePercentage() {
+            const tableData = getTableData();
+            const totalWeight = tableData.reduce((sum, item) => sum + item.weight, 0);
+            const percentage = ((totalWeight / max_weight) * 100).toFixed(2);
+            const percentageElem = document.getElementById('percentage');
+            percentageElem.innerText = `${percentage}%`;
+            // Actualizar el color del porcentaje
+            if (percentage < 25) {
+                percentageElem.style.color = 'green';
+            } else if (percentage < 50) {
+                percentageElem.style.color = 'yellow';
+            } else if (percentage < 75) {
+                percentageElem.style.color = 'orange';
+            } else {
+                percentageElem.style.color = 'red';
+            }
+        }
+
+        function updateMaxWeight() {
+            max_weight = parseFloat(document.getElementById('maxWeightSlider').value);
+            if (!isNaN(max_weight) && max_weight > 0) {
+                updatePercentage();
+                toggleSettings();
+            }
+        }
+
+        function toggleSettings() {
+            const settingsContainer = document.getElementById('settingsContainer');
+            settingsContainer.style.display = settingsContainer.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function toggleForm() {
+            const formContainer = document.getElementById('formContainer');
+            formContainer.style.display = formContainer.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function updateMaxWeightLabel(value) {
+            document.getElementById('maxWeightLabel').innerText = value;
+        }
+
+        function showFullDescription(description) {
+            document.getElementById('descriptionText').innerText = description;
+            document.getElementById('fullDescription').style.display = 'block';
+        }
+
+        function closeFullDescription() {
+            document.getElementById('fullDescription').style.display = 'none';
+        }
+
+        function truncateText(text, length) {
+            if (text.length > length) {
+                return text.substring(0, length) + '...';
+            }
+            return text;
         }
     </script>
 </body>
