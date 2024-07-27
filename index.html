@@ -113,6 +113,20 @@
         .form-container button {
             cursor: pointer;
         }
+        .import-export-container {
+            text-align: center;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .import-export-container button {
+            padding: 5 px;
+            font-size: 16px;
+        }
+
+        .import-export-container button {
+            cursor: pointer;
+        }
 
         .edit-btn,
         .delete-btn {
@@ -235,7 +249,13 @@
             </tbody>
         </table>
     </div>
-
+    <div>
+        <div class="import-export-container">
+            <button class="export-button" onclick="exportCSV()">Exportar CSV</button>            
+            <button class="import-button" onclick="document.getElementById('importInput').click()">Importar CSV</button>
+            <input type="file" id="importInput" accept=".csv" style="display: none;" onchange="importCSV(event)">
+        </div>
+    </div>
     <div class="full-description" id="fullDescription">
         <p id="descriptionText"></p>
         <!-- <button onclick="closeFullDescription()">✖️</button> -->
@@ -512,6 +532,74 @@
                 row.cells[5].querySelector('.edit-btn').setAttribute('onclick', `editItem(${index})`);
                 row.cells[5].querySelector('.delete-btn').setAttribute('onclick', `deleteItem(this)`);
             });
+        }
+
+        function exportCSV() {
+            const cookieData = getCookie('tableData');
+            if (!cookieData) {
+                alert('No hay datos para exportar.');
+                return;
+            }
+
+            const data = JSON.parse(cookieData);
+            if (data.length === 0) {
+                alert('No hay datos para exportar.');
+                return;
+            }
+
+            const csvRows = [];
+            const headers = ['Cantidad', 'Nombre', 'Descripción', 'Peso', 'Valor'];
+            csvRows.push(headers.join(','));
+
+            data.forEach(item => {
+                const values = [
+                    item.quantity,
+                    item.name,
+                    item.description,
+                    item.weight,
+                    item.value
+                ];
+                csvRows.push(values.join(','));
+            });
+
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'data.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                alert('Por favor, selecciona un archivo CSV.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const content = e.target.result;
+                const rows = content.split('\n').slice(1);
+                const data = rows.map(row => {
+                    const [quantity, name, description, weight, value] = row.split(',');
+                    return {
+                        quantity: quantity.trim(),
+                        name: name.trim(),
+                        description: description.trim(),
+                        weight: parseFloat(weight.trim()),
+                        value: value.trim()
+                    };
+                });
+
+                setCookie('tableData', JSON.stringify(data), 30);
+                loadTable(data);
+                updateButtonIndices();
+            };
+            reader.readAsText(file);
         }
     </script>
 </body>
