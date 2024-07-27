@@ -281,7 +281,7 @@
                 const newRow = tableBody.insertRow();
                 newRow.innerHTML = `
                     <td>${item.name}</td>
-                    <td class="description" onclick="showFullDescription('${item.description}')">${truncateText(item.description, 30)}</td>
+                    <td class="description" onclick="showFullDescription('${index}')">${truncateText(item.description, 30)}</td>
                     <td>${item.weight}</td>
                     <td>${item.value}</td>
                     <td>
@@ -292,7 +292,7 @@
             });
             updatePercentage();
         };
-       
+
 
         function addItem() {
             const name = document.getElementById('name').value;
@@ -308,7 +308,7 @@
                     const newRow = table.insertRow();
                     newRow.innerHTML = `
                 <td>${name}</td>
-                <td class="description" onclick="showFullDescription('${description}')">${truncateText(description, 30)}</td>
+                <td class="description" onclick="showFullDescription(${table.rows.length - 1})">${truncateText(description, 30)}</td>
                 <td>${weight}</td>
                 <td>${value}</td>
                 <td>
@@ -320,9 +320,12 @@
                     // Actualizar la fila existente
                     const row = table.rows[editingIndex];
                     row.cells[0].innerText = name;
-                    row.cells[1].innerHTML = `<td class="description" onclick="showFullDescription('${description}')">${truncateText(description, 30)}</td>`;
+                    row.cells[1].innerHTML = `<td class="description" onclick="showFullDescription('${editingIndex}')">${truncateText(description, 30)}</td>`;
+                    console.log(row.cells[1].innerHTML);
+                    row.cells[1].innerText = description;
                     row.cells[2].innerText = weight;
                     row.cells[3].innerText = value;
+
                 }
 
                 // Guardar los datos en la cookie
@@ -450,9 +453,11 @@
             document.getElementById('maxWeightLabel').innerText = value;
         }
 
-        function showFullDescription(description) {
-            document.getElementById('descriptionText').innerText = description;
-            document.getElementById('fullDescription').style.display = 'block';
+        function showFullDescription(editingIndex) {
+            if (window.matchMedia("(max-width: 600px)").matches) {
+                document.getElementById('descriptionText').innerHTML = document.getElementById('dataTable').getElementsByTagName('tbody')[0].rows[editingIndex].cells[1].innerText;              
+                document.getElementById('fullDescription').style.display = 'block';
+            }
         }
 
         function closeFullDescription() {
