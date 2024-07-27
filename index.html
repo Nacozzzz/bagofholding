@@ -210,6 +210,7 @@
         </div>
         <div class="form-container" id="formContainer">
             <input type="hidden" id="editIndex" value="-1">
+            <input type="number" id="quantity" placeholder="Cantidad">
             <input type="text" id="name" placeholder="Nombre">
             <input type="text" id="description" placeholder="Descripción">
             <input type="number" id="weight" placeholder="Peso" step="0.01">
@@ -219,6 +220,7 @@
         <table id="dataTable">
             <thead>
                 <tr>
+                    <th>Cantidad</th>
                     <th>Nombre</th>
                     <th>Descripción</th>
                     <th>Peso</th>
@@ -280,6 +282,7 @@
             data.forEach((item, index) => {
                 const newRow = tableBody.insertRow();
                 newRow.innerHTML = `
+                    <td>${item.quantity}</td>
                     <td>${item.name}</td>
                     <td class="description" onclick="showFullDescription('${index}')">${truncateText(item.description, 30)}</td>
                     <td>${item.weight}</td>
@@ -295,6 +298,7 @@
 
 
         function addItem() {
+            const quantity = document.getElementById('quantity').value;
             const name = document.getElementById('name').value;
             const description = document.getElementById('description').value;
             const weight = parseFloat(document.getElementById('weight').value);
@@ -307,6 +311,7 @@
                     // Crear una nueva fila
                     const newRow = table.insertRow();
                     newRow.innerHTML = `
+                <td>${quantity}</td>
                 <td>${name}</td>
                 <td class="description" onclick="showFullDescription(${table.rows.length - 1})">${truncateText(description, 30)}</td>
                 <td>${weight}</td>
@@ -319,12 +324,12 @@
                 } else {
                     // Actualizar la fila existente
                     const row = table.rows[editingIndex];
-                    row.cells[0].innerText = name;
-                    row.cells[1].innerHTML = `<td class="description" onclick="showFullDescription('${editingIndex}')">${truncateText(description, 30)}</td>`;
-                    console.log(row.cells[1].innerHTML);
-                    row.cells[1].innerText = description;
-                    row.cells[2].innerText = weight;
-                    row.cells[3].innerText = value;
+                    row.cells[0].innerText = quantity;
+                    row.cells[1].innerText = name;
+                    row.cells[2].innerHTML = `<td class="description" onclick="showFullDescription('${editingIndex}')">${truncateText(description, 30)}</td>`;                    
+                    row.cells[2].innerText = description;
+                    row.cells[3].innerText = weight;
+                    row.cells[4].innerText = value;
 
                 }
 
@@ -333,6 +338,7 @@
                 setCookie('tableData', JSON.stringify(tableData), 30);
 
                 // Limpiar los campos de entrada
+                document.getElementById('quantity').value = '';
                 document.getElementById('name').value = '';
                 document.getElementById('description').value = '';
                 document.getElementById('weight').value = '';
@@ -349,10 +355,11 @@
 
         function editItem(index) {
             const row = document.querySelectorAll('#dataTable tbody tr')[index];
-            document.getElementById('name').value = row.cells[0].innerText;
-            document.getElementById('description').value = row.cells[1].innerText;
-            document.getElementById('weight').value = row.cells[2].innerText;
-            document.getElementById('value').value = row.cells[3].innerText;
+            document.getElementById('quantity').value = row.cells[0].innerText;
+            document.getElementById('name').value = row.cells[1].innerText;
+            document.getElementById('description').value = row.cells[2].innerText;
+            document.getElementById('weight').value = row.cells[3].innerText;
+            document.getElementById('value').value = row.cells[4].innerText;
             document.getElementById('editIndex').value = index;
             editingIndex = index; // Actualiza el índice de edición
             toggleForm();
@@ -380,10 +387,11 @@
             rows.forEach(row => {
                 const cells = row.getElementsByTagName('td');
                 const item = {
-                    name: cells[0].innerText,
-                    description: cells[1].innerText,
-                    weight: parseFloat(cells[2].innerText),
-                    value: cells[3].innerText
+                    quantity: cells[0].innerText,
+                    name: cells[1].innerText,
+                    description: cells[2].innerText,
+                    weight: parseFloat(cells[3].innerText),
+                    value: cells[4].innerText
                 };
                 data.push(item);
             });
@@ -415,7 +423,7 @@
 
         function updatePercentage() {
             const tableData = getTableData();
-            const totalWeight = tableData.reduce((sum, item) => sum + item.weight, 0);
+            const totalWeight = tableData.reduce((sum, item) => sum + (item.weight*item.quantity), 0);
             const percentage = ((totalWeight / max_weight) * 100).toFixed(2);
             const percentageElem = document.getElementById('percentage');
             percentageElem.innerText = `${percentage}%`;
@@ -455,7 +463,7 @@
 
         function showFullDescription(editingIndex) {
             if (window.matchMedia("(max-width: 600px)").matches) {
-                document.getElementById('descriptionText').innerHTML = document.getElementById('dataTable').getElementsByTagName('tbody')[0].rows[editingIndex].cells[1].innerText;              
+                document.getElementById('descriptionText').innerHTML = document.getElementById('dataTable').getElementsByTagName('tbody')[0].rows[editingIndex].cells[2].innerText;              
                 document.getElementById('fullDescription').style.display = 'block';
             }
         }
