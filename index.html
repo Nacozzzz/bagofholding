@@ -200,7 +200,7 @@
             </div>
             <div>
                 <button class="settings-button" onclick="toggleSettings()">⚙️</button>
-                <button class="add-button" onclick="toggleForm()">➕</button>
+                <button class="add-button" onclick="toggleAddItemForm()">➕</button>
             </div>
             <div class="settings-container" id="settingsContainer">
                 <label for="maxWeightSlider">Peso Máximo: <span id="maxWeightLabel"
@@ -259,8 +259,8 @@
                     })
                     .catch(error => console.error('Error al cargar los datos:', error));
             }
-            var cookieMaxWeight =getCookie('maxWeight');
-            if (cookieMaxWeight){
+            var cookieMaxWeight = getCookie('maxWeight');
+            if (cookieMaxWeight) {
                 document.getElementById('maxWeightSlider').value = cookieMaxWeight;
                 document.getElementById('maxWeightLabel').innerText = cookieMaxWeight;
             } else {
@@ -335,7 +335,7 @@
                     const row = table.rows[editingIndex];
                     row.cells[0].innerText = quantity;
                     row.cells[1].innerText = name;
-                    row.cells[2].innerHTML = `<td class="description" onclick="showFullDescription('${editingIndex}')">${truncateText(description, 30)}</td>`;                    
+                    row.cells[2].innerHTML = `<td class="description" onclick="showFullDescription('${editingIndex}')">${truncateText(description, 30)}</td>`;
                     row.cells[2].innerText = description;
                     row.cells[3].innerText = weight;
                     row.cells[4].innerText = value;
@@ -390,6 +390,16 @@
             updatePercentage();
         }
 
+        function toggleAddItemForm() {
+            document.getElementById('quantity').value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('weight').value = '';
+            document.getElementById('value').value = '';
+            document.getElementById('editIndex').value = -1;
+            toggleForm();
+        }
+
         function getTableData() {
             const rows = document.querySelectorAll('#dataTable tbody tr');
             const data = [];
@@ -432,7 +442,7 @@
 
         function updatePercentage() {
             const tableData = getTableData();
-            const totalWeight = tableData.reduce((sum, item) => sum + (item.weight*item.quantity), 0);
+            const totalWeight = tableData.reduce((sum, item) => sum + (item.weight * item.quantity), 0);
             const percentage = ((totalWeight / max_weight) * 100).toFixed(2);
             const percentageElem = document.getElementById('percentage');
             percentageElem.innerText = `${percentage}%`;
@@ -473,7 +483,7 @@
 
         function showFullDescription(editingIndex) {
             if (window.matchMedia("(max-width: 600px)").matches) {
-                document.getElementById('descriptionText').innerHTML = document.getElementById('dataTable').getElementsByTagName('tbody')[0].rows[editingIndex].cells[2].innerText;              
+                document.getElementById('descriptionText').innerHTML = document.getElementById('dataTable').getElementsByTagName('tbody')[0].rows[editingIndex].cells[2].innerText;
                 document.getElementById('fullDescription').style.display = 'block';
             }
         }
