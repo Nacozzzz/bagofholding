@@ -395,8 +395,7 @@
             document.getElementById('name').value = '';
             document.getElementById('description').value = '';
             document.getElementById('weight').value = '';
-            document.getElementById('value').value = '';
-            document.getElementById('editIndex').value = -1;
+            document.getElementById('value').value = '';            
             editingIndex = -1
             toggleForm();
         }
@@ -505,7 +504,7 @@
             rows.forEach((row, index) => {
                 row.cells[2].setAttribute('onclick', `showFullDescription(${index})`);
                 row.cells[5].querySelector('.edit-btn').setAttribute('onclick', `editItem(${index})`);
-                row.cells[5].querySelector('.delete-btn').setAttribute('onclick', `deleteItem(${index})`);
+                row.cells[5].querySelector('.delete-btn').setAttribute('onclick', `deleteItem(this)`);
             });
         }
     </script>
