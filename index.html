@@ -238,7 +238,7 @@
 
     <div class="full-description" id="fullDescription">
         <p id="descriptionText"></p>
-        <button onclick="closeFullDescription()">✖️</button>
+        <!-- <button onclick="closeFullDescription()">✖️</button> -->
     </div>
 
     <script>
@@ -285,6 +285,12 @@
             });
         });
 
+        document.addEventListener('click', function (event) {
+            const fullDescription = document.getElementById('fullDescription');
+            if (fullDescription.style.display === 'block' && !fullDescription.contains(event.target) && !event.target.matches('.description')) {
+                closeFullDescription();
+            }
+        });
         function loadTable(data) {
             const tableBody = document.querySelector('#dataTable tbody');
             tableBody.innerHTML = '';
@@ -395,7 +401,7 @@
             document.getElementById('name').value = '';
             document.getElementById('description').value = '';
             document.getElementById('weight').value = '';
-            document.getElementById('value').value = '';            
+            document.getElementById('value').value = '';
             editingIndex = -1
             toggleForm();
         }
