@@ -386,7 +386,7 @@
             // Guardar los datos actualizados en la cookie
             const tableData = getTableData();
             setCookie('tableData', JSON.stringify(tableData), 30);
-
+            updateButtonIndices()
             updatePercentage();
         }
 
@@ -487,6 +487,15 @@
                 return text.substring(0, length) + '...';
             }
             return text;
+        }
+
+        function updateButtonIndices() {
+            const rows = document.querySelectorAll('#dataTable tbody tr');
+            rows.forEach((row, index) => {
+                row.cells[2].setAttribute('onclick', `showFullDescription(${index})`);
+                row.cells[5].querySelector('.edit-btn').setAttribute('onclick', `editItem(${index})`);
+                row.cells[5].querySelector('.delete-btn').setAttribute('onclick', `deleteItem(${index})`);
+            });
         }
     </script>
 </body>
