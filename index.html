@@ -259,6 +259,13 @@
                     })
                     .catch(error => console.error('Error al cargar los datos:', error));
             }
+            var cookieMaxWeight =getCookie('maxWeight');
+            if (cookieMaxWeight){
+                document.getElementById('maxWeightSlider').value = cookieMaxWeight;
+                document.getElementById('maxWeightLabel').innerText = cookieMaxWeight;
+            } else {
+                setCookie('maxWeight', 100, 30);
+            }
             updatePercentage();
         });
 
@@ -443,6 +450,7 @@
 
         function updateMaxWeight() {
             max_weight = parseFloat(document.getElementById('maxWeightSlider').value);
+            setCookie('maxWeight', max_weight, 30);
             if (!isNaN(max_weight) && max_weight > 0) {
                 updatePercentage();
                 toggleSettings();
