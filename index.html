@@ -198,8 +198,10 @@
                 <img src="./icon.jpg" alt="Porcentaje">
                 <div class="percentage" id="percentage">0%</div>
             </div>
-            <button class="settings-button" onclick="toggleSettings()">⚙️</button>
-            <button class="add-button" onclick="toggleForm()">➕</button>
+            <div>
+                <button class="settings-button" onclick="toggleSettings()">⚙️</button>
+                <button class="add-button" onclick="toggleForm()">➕</button>
+            </div>
             <div class="settings-container" id="settingsContainer">
                 <label for="maxWeightSlider">Peso Máximo: <span id="maxWeightLabel"
                         style="width: 50px; display: inline-block;">100</span></label>
@@ -225,7 +227,7 @@
                     <th>Descripción</th>
                     <th>Peso</th>
                     <th>Valor</th>
-                    <th>Acciones</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
